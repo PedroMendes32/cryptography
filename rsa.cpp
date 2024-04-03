@@ -132,6 +132,16 @@ public:
     inline void print_private_key() const {
         std::cout << "Chave privada (private_key, n): " << this->private_key << ", " << n << std::endl;
     }
+
+    void writeKeysToFile(const std::string& filename) const {
+        std::ofstream file(filename);
+        if (!file.is_open()) {
+            throw std::runtime_error("Erro ao abrir o arquivo para escrita.");
+        }
+        file << "Chave Pública: " << this->public_key << "\n";
+        file << "Chave Privada: " << this->private_key << "\n";
+        file << "N: " << n << "\n";
+    }
 };
 
 std::vector<unsigned char> readImage(const std::string& filename) {
@@ -172,7 +182,7 @@ int main(int argc, char *argv[]) {
         std::string inputFilename = "exemplo_1.jpeg";
         std::string encryptedFilename = "exemplo_1_encrypted.bin";
         std::string decryptedFilename = "exemplo_1_decrypted.jpeg";
-
+        std::string keyFileName = "rsa_keys.txt";
         std::vector<unsigned char> imageData = readImage(inputFilename);
        
         std::vector<long long int> plaintext(imageData.begin(), imageData.end());
@@ -184,7 +194,7 @@ int main(int argc, char *argv[]) {
         std::vector<unsigned char> decryptedData(decryptedtext.begin(), decryptedtext.end());
 
         writeImage(decryptedFilename, decryptedData);
-
+        rsa.writeKeysToFile(keyFileName);
         std::cout << "Imagem criptografada e descriptografada com sucesso!" << std::endl;
 
         rsa.print_public_key();
