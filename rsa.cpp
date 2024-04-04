@@ -4,11 +4,21 @@
 #include <stdexcept>
 #include <random>
 
-class RSA {
+class RSA{
 private:
     long long int public_key;
     long long int private_key;
     long long int n;
+
+    enum class file_type : int 
+    {
+        MESSAGE = 0,
+        IMAGE = 1,
+        FILE = 2,
+        UNKNOW = 3
+    };
+
+    file_type type;
 
     bool is_prime(long long int n) const {
         if (n <= 1) return false;
@@ -62,12 +72,31 @@ private:
         return result;
     }
 
+    template<typename T_RETURN, typename T_ARG, typename T_CAST> T_RETURN convert (const T_ARG& data) const 
+    {
+        std::vector<T_RETURN> result;
+        result.reserve(data.size());
+
+        for (auto byte : data)
+        {
+            result.push_back(static_cast<T_CAST>(byte));
+        }
+        return result;
+    }
+
 public:
-    RSA() = delete;
+    RSA(void) = delete;
     explicit RSA(long long int limite_inferior, long long int limite_superior) {
         if (limite_inferior >= limite_superior) {
             throw std::invalid_argument("O limite inferior deve ser menor que o limite superior.");
         }
+
+        if (type != file_type::MESSAGE && type != file_type::FILE && type != file_type::IMAGE && type != file_type::UNKNOW)
+        {
+            throw std::invalid_argument("Tipo de dado invalido.");
+        }
+        
+        this->type = type;
 
         std::random_device rd;
         std::mt19937 rng(rd());
@@ -82,6 +111,119 @@ public:
         } while (gcd(this->public_key, phi) != 1);
 
         this->private_key = mod_inverse(this->public_key, phi);
+    }
+
+    explicit RSA (const long long int& _private_key, const long long int& _public_key, const long long int& _n, file_type _type) 
+    : public_key(_public_key),private_key(_private_key),n(_n),type(_type)
+    {
+    }
+
+    explicit RSA (const long long int& _public_key, const long long int& _n) : public_key(_public_key),n(_n)
+    {
+    }
+
+    explicit RSA (const long long int& _private_key, const long long int& _n) : private_key(_private_key),n(_n)
+    {
+    }
+
+    inline long long int get_n (void) const 
+    {
+        try
+        {
+            return this->n;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Erro: " << e.what() << std::endl;
+            exit(1);
+        }
+    }
+
+    inline long long int get_public_key (void) const 
+    {
+        try
+        {
+            return this->public_key;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Erro: " << e.what() << std::endl;
+            exit(1);
+        }
+    }
+
+    inline long long int get_private_key (void) const 
+    {
+        try
+        {
+            return this->private_key;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Erro: " << e.what() << std::endl;
+            exit(1);
+        }
+    }
+
+    inline void set_n (const long long int& n)
+    {
+        try
+        {
+            this->n = n;    
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Erro: " << e.what() << std::endl;
+            exit(1);
+        }
+    }
+
+    inline void set_public_key (const long long int& public_key)
+    {
+        try
+        {
+            this->public_key = public_key;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Erro: " << e.what() << std::endl;
+            exit(1);
+        }
+    }
+
+    inline void set_private_key (const long long int& private_key)
+    {
+        try
+        {
+            this->private_key = private_key;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Erro: " << e.what() << std::endl;
+            exit(1);
+        }
+    }
+
+    inline void set_file_type (file_type type)
+    {
+        try
+        {
+            this->type = type;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "Erro: " << e.what() << std::endl;
+            exit(1);
+        }
+    }
+
+    std::vector<long long int> string_to_array (const std::string& message) const 
+    {
+        return convert<std::vector<long long int>,std::string,char>(message);
+    }
+    std::string array_to_string (const std::vector<long long int>& data)
+    {
+        return convert<std::string,std::vector<long long int>,long long int>(data);
     }
 
     std::vector<long long int> encrypt(const std::vector<long long int>& data) const {
@@ -142,63 +284,46 @@ public:
         file << "Chave Privada: " << this->private_key << "\n";
         file << "N: " << n << "\n";
     }
+
+    static std::vector<unsigned char> readImage(const std::string& filename)  
+    { 
+        std::ifstream file(filename, std::ios::binary | std::ios::ate);
+        if (!file.is_open())
+        {
+            throw std::runtime_error("Erro ao abrir o arquivo de imagem para leitura.");
+        }
+
+        std::streamsize size = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        std::vector<unsigned char> buffer(size);
+        if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+        {
+            throw std::runtime_error("Erro ao ler os dados do arquivo de imagem.");
+        }
+
+        return buffer;
+    }
+
+    static void writeImage(const std::string& filename, const std::vector<unsigned char>& data)  
+    { 
+        std::ofstream file(filename, std::ios::binary);
+        if (!file.is_open())
+        {
+            throw std::runtime_error("Erro ao abrir o arquivo de imagem para escrita.");
+        }
+
+        if (!file.write(reinterpret_cast<const char*>(data.data()), data.size()))
+        {
+            throw std::runtime_error("Erro ao escrever os dados no arquivo de imagem.");
+        }
+    }
 };
 
-std::vector<unsigned char> readImage(const std::string& filename) {
-    std::ifstream file(filename, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
-        throw std::runtime_error("Erro ao abrir o arquivo de imagem para leitura.");
-    }
-
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
-
-    std::vector<unsigned char> buffer(size);
-    if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
-        throw std::runtime_error("Erro ao ler os dados do arquivo de imagem.");
-    }
-
-    return buffer;
-}
-
-void writeImage(const std::string& filename, const std::vector<unsigned char>& data) {
-    std::ofstream file(filename, std::ios::binary);
-    if (!file.is_open()) {
-        throw std::runtime_error("Erro ao abrir o arquivo de imagem para escrita.");
-    }
-
-    if (!file.write(reinterpret_cast<const char*>(data.data()), data.size())) {
-        throw std::runtime_error("Erro ao escrever os dados no arquivo de imagem.");
-    }
-}
 
 int main(int argc, char *argv[]) {
     try {
-        long long int limite_inferior = 100;
-        long long int limite_superior = 200;
-
-        RSA rsa(limite_inferior, limite_superior);
-
-        std::string inputFilename = "exemplo_1.jpeg";
-        std::string encryptedFilename = "exemplo_1_encrypted.bin";
-        std::string decryptedFilename = "exemplo_1_decrypted.jpeg";
-        std::string keyFileName = "rsa_keys.txt";
-        std::vector<unsigned char> imageData = readImage(inputFilename);
-       
-        std::vector<long long int> plaintext(imageData.begin(), imageData.end());
-        std::vector<long long int> ciphertext = rsa.encrypt(plaintext);
-
-        rsa.write_to_file(encryptedFilename, ciphertext);
-
-        std::vector<long long int> decryptedtext = rsa.decrypt(ciphertext);
-        std::vector<unsigned char> decryptedData(decryptedtext.begin(), decryptedtext.end());
-
-        writeImage(decryptedFilename, decryptedData);
-        rsa.writeKeysToFile(keyFileName);
-        std::cout << "Imagem criptografada e descriptografada com sucesso!" << std::endl;
-
-        rsa.print_public_key();
-        rsa.print_private_key();
+        
     }
     catch (const std::exception& e) {
         std::cerr << "Erro: " << e.what() << std::endl;
