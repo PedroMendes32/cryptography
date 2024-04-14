@@ -2,93 +2,140 @@
 
 bool RSA::is_prime(long long int n) const
 {
-    if (n <= 1) return false;
-    if (n <= 3) return true;
-    if (n % 2 == 0 || n % 3 == 0) return false;
-    for (long long int i = 5; i * i <= n; i += 6)
+    try
     {
-        if (n % i == 0 || n % (i + 2) == 0)
+        if (n <= 1) return false;
+        if (n <= 3) return true;
+        if (n % 2 == 0 || n % 3 == 0) return false;
+        for (long long int i = 5; i * i <= n; i += 6)
         {
-            return false;
+            if (n % i == 0 || n % (i + 2) == 0)
+            {
+                return false;
+            }
         }
+        return true;
     }
-    return true;
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Erro durante verificação de número primo: " << ex.what() << std::endl;
+        throw std::runtime_error("Erro durante verificação de número primo");
+    }
 }
 
 long long int RSA::generate_prime(long long int limite_inferior, long long int limite_superior, std::mt19937& rng) const
 {
-    std::uniform_int_distribution<long long int> dist(limite_inferior, limite_superior);
-    long long int prime_candidate;
-    do
+    try
     {
-        prime_candidate = dist(rng);
+        std::uniform_int_distribution<long long int> dist(limite_inferior, limite_superior);
+        long long int prime_candidate;
+        do
+        {
+            prime_candidate = dist(rng);
+        }
+        while (!is_prime(prime_candidate));
+        return prime_candidate;
     }
-    while (!is_prime(prime_candidate));
-    return prime_candidate;
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Erro durante geração de número primo: "<< ex.what() << std::endl;
+        throw std::runtime_error("Erro durante geração de número primo");
+    }
 }
 
 long long int RSA::gcd(long long int a, long long int b) const
 {
-    if (b == 0) return a;
-    return gcd(b, a % b);
+    try
+    {
+        if (b == 0) return a;
+        return gcd(b, a % b);
+    }
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Erro durante a geração do máximo divisor comum: "<< ex.what() << std::endl;
+        throw std::runtime_error("Erro durante a geração do máximo divisor comum");
+    }
 }
 
 long long int RSA::mod_inverse(long long int a, long long int m) const
 {
-    long long int m0 = m, t, q;
-    long long int x0 = 0, x1 = 1;
-    if (m == 1) return 0;
-    while (a > 1)
+    try
     {
-        q = a / m;
-        t = m;
-        m = a % m, a = t;
-        t = x0;
-        x0 = x1 - q * x0;
-        x1 = t;
+        long long int m0 = m, t, q;
+        long long int x0 = 0, x1 = 1;
+        if (m == 1) return 0;
+        while (a > 1)
+        {
+            q = a / m;
+            t = m;
+            m = a % m, a = t;
+            t = x0;
+            x0 = x1 - q * x0;
+            x1 = t;
+        }
+        if (x1 < 0) x1 += m0;
+        return x1;
     }
-    if (x1 < 0) x1 += m0;
-    return x1;
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Erro durante o cálculo do MOD inverso: "<< ex.what() << std::endl;
+        throw std::runtime_error("Erro durante o cálculo do MOD inverso");
+    }
 }
 
 long long int RSA::mod_pow(long long int base, long long int exponent, long long int modulus) const
 {
-    long long int result = 1;
-    base = base % modulus;
-    while (exponent > 0)
+    try
     {
-        if (exponent % 2 == 1)
+        long long int result = 1;
+        base = base % modulus;
+        while (exponent > 0)
         {
-            result = (result * base) % modulus;
+            if (exponent % 2 == 1)
+            {
+                result = (result * base) % modulus;
+            }
+            exponent = exponent >> 1;
+            base = (base * base) % modulus;
         }
-        exponent = exponent >> 1;
-        base = (base * base) % modulus;
+        return result;
     }
-    return result;
+    catch(const std::exception& e)
+    {
+        std::cerr << "Erro durante cálculo da exponenciação modular: "<< e.what() << std::endl;
+        throw std::runtime_error("Erro durante cálculo da exponenciação modular");
+    }
 }
 
 RSA::RSA(long long int limite_inferior, long long int limite_superior)
 {
-    if (limite_inferior >= limite_superior)
+    try
     {
-        throw std::invalid_argument("O limite inferior deve ser menor que o limite superior.");
+        if (limite_inferior >= limite_superior)
+        {
+            throw std::invalid_argument("O limite inferior deve ser menor que o limite superior.");
+        }
+        std::random_device rd;
+        std::mt19937 rng(rd());
+        long long int p = generate_prime(limite_inferior, limite_superior, rng);
+        long long int q = generate_prime(limite_inferior, limite_superior, rng);
+        this->n = p * q;
+        long long int phi = (p - 1) * (q - 1);
+
+        std::uniform_int_distribution<long long int> phi_dist(2, phi - 1);
+        do
+        {
+            this->public_key = phi_dist(rng);
+        }
+        while (gcd(this->public_key, phi) != 1);
+
+        this->private_key = mod_inverse(this->public_key, phi);
     }
-
-    std::random_device rd;
-    std::mt19937 rng(rd());
-    long long int p = generate_prime(limite_inferior, limite_superior, rng);
-    long long int q = generate_prime(limite_inferior, limite_superior, rng);
-    this->n = p * q;
-    long long int phi = (p - 1) * (q - 1);
-
-    std::uniform_int_distribution<long long int> phi_dist(2, phi - 1);
-    do
+    catch(const std::exception& ex)
     {
-        this->public_key = phi_dist(rng);
+        std::cerr << "Erro durante a criação do objeto: " << ex.what() << std::endl;
+        throw std::runtime_error("Erro durante a criação do objeto");
     }
-    while (gcd(this->public_key, phi) != 1);
-
-    this->private_key = mod_inverse(this->public_key, phi);
 }
 
 inline long long int RSA::get_n(void) const
@@ -123,24 +170,40 @@ inline void RSA::set_private_key(const long long int& private_key)
 
 std::vector<long long int> RSA::encrypt(const std::vector<long long int>& data) const
 {
-    std::vector<long long int> encrypted_data;
-    encrypted_data.reserve(data.size());
-    for (long long int byte : data)
+    try
     {
-        encrypted_data.push_back(mod_pow(byte, this->public_key, this->n));
+        std::vector<long long int> encrypted_data;
+        encrypted_data.reserve(data.size());
+        for (long long int byte : data)
+        {
+            encrypted_data.push_back(mod_pow(byte, this->public_key, this->n));
+        }
+        return encrypted_data;
     }
-    return encrypted_data;
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Erro durante o processo de criptografia: "<< ex.what() << std::endl;
+        throw std::runtime_error("Erro durante o processo de criptografia");
+    }
 }
 
 std::vector<long long int> RSA::decrypt(const std::vector<long long int>& encrypted_data) const
 {
-    std::vector<long long int> decrypted_data;
-    decrypted_data.reserve(encrypted_data.size());
-    for (long long int byte : encrypted_data)
+    try
     {
-        decrypted_data.push_back(mod_pow(byte, this->private_key, this->n));
+        std::vector<long long int> decrypted_data;
+        decrypted_data.reserve(encrypted_data.size());
+        for (long long int byte : encrypted_data)
+        {
+            decrypted_data.push_back(mod_pow(byte, this->private_key, this->n));
+        }
+        return decrypted_data;
     }
-    return decrypted_data;
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Erro durante o processo de decriptografia: " << ex.what() << std::endl;
+        throw std::runtime_error("Erro durante o processo de decriptografia");
+    }
 }
 
 void RSA::write_to_file(const std::string& filename, const std::vector<long long int>& data) const
@@ -182,7 +245,7 @@ inline void RSA::print_private_key() const
     std::cout << "Chave privada (private_key, n): " << this->private_key << ", " << n << std::endl;
 }
 
-void RSA::writeKeysToFile(const std::string& filename) const
+void RSA::write_keys_to_file(const std::string& filename) const
 {
     std::ofstream file(filename);
     if (!file.is_open())
@@ -194,7 +257,7 @@ void RSA::writeKeysToFile(const std::string& filename) const
     file << "N: " << n << "\n";
 }
 
-std::vector<unsigned char> RSA::readImage(const std::string& filename)
+std::vector<unsigned char> RSA::read_image(const std::string& filename)
 {
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
     if (!file.is_open())
@@ -214,7 +277,7 @@ std::vector<unsigned char> RSA::readImage(const std::string& filename)
     return buffer;
 }
 
-void RSA::writeImage(const std::string& filename, const std::vector<unsigned char>& data)
+void RSA::write_image(const std::string& filename, const std::vector<unsigned char>& data)
 {
     std::ofstream file(filename, std::ios::binary);
     if (!file.is_open())

@@ -36,8 +36,8 @@ public:
     std::vector<long long int> read_from_file(const std::string& filename) const;
     inline void print_public_key() const;
     inline void print_private_key() const;
-    void writeKeysToFile(const std::string& filename) const;
-    static std::vector<unsigned char> readImage(const std::string& filename);
-    static void writeImage(const std::string& filename, const std::vector<unsigned char>& data);
+    void write_keys_to_file(const std::string& filename) const;
+    static std::vector<unsigned char> read_image(const std::string& filename);
+    static void write_image(const std::string& filename, const std::vector<unsigned char>& data);
 };
 
