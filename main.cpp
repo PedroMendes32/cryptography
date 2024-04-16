@@ -3,7 +3,7 @@
 #include<memory>
 #include<string>
 #include<locale.h>
-#define CRIPTOGRAFAR       1
+#define CRIPTOGRAFAR       1 
 #define DECRIPTOGRAFAR     2
 #define SAIR               3
 #define GERAR_CHAVES       4
@@ -11,6 +11,7 @@
 #define USAR_CHAVE_PUBLICA 6
 #define VOLTAR             7
 #define USAR_CHAVE_PRIVADA 8
+//TODO -> Passar as assinaturas das funções para um arquivo .hpp e a implementação para um arquivo .cpp
 
 using namespace std;
 
