@@ -22,7 +22,7 @@ private:
 public:
     RSA(void) = delete;
     explicit RSA(long long int limite_inferior, long long int limite_superior);
-
+    explicit RSA(long long int private_or_public_key, long long int n, std::string type_key);
     inline long long int get_n(void) const;
     inline long long int get_public_key(void) const;
     inline long long int get_private_key(void) const;

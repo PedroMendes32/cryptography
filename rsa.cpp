@@ -138,6 +138,30 @@ RSA::RSA(long long int limite_inferior, long long int limite_superior)
     }
 }
 
+RSA::RSA(long long int private_or_public_key, long long int n, std::string type_key)
+{
+    try
+    {
+        if (type_key == "PRIVATE_KEY")
+        {
+            this->private_key = private_or_public_key;
+            this->public_key = 0;
+        }
+        if (type_key == "PUBLIC_KEY")
+        {
+            this->public_key = private_or_public_key;
+            this->private_key = 0;
+        }
+        this->n = n;
+    }
+    catch(const std::exception& ex)
+    {
+        std::cerr << "Erro durante a criação do objeto: " << ex.what() << std::endl;
+        throw std::runtime_error("Erro durante a criação do objeto");
+    }
+    
+}
+
 inline long long int RSA::get_n(void) const
 {
     return this->n;

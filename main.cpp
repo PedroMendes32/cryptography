@@ -3,17 +3,27 @@
 #include<memory>
 #include<string>
 #include<locale.h>
-#define CRIPTOGRAFAR       1 
-#define DECRIPTOGRAFAR     2
-#define SAIR               3
-#define GERAR_CHAVES       4
-#define USAR_CHAVE_ATUAL   5
-#define USAR_CHAVE_PUBLICA 6
-#define VOLTAR             7
-#define USAR_CHAVE_PRIVADA 8
-//TODO -> Passar as assinaturas das funções para um arquivo .hpp e a implementação para um arquivo .cpp
+constexpr auto CRIPTOGRAFAR = 1 ;
+constexpr auto DECRIPTOGRAFAR = 2;
+constexpr auto SAIR = 3;
+constexpr auto GERAR_CHAVES = 4;
+constexpr auto USAR_CHAVE_ATUAL = 5;
+constexpr auto USAR_CHAVE_PUBLICA = 6;
+constexpr auto VOLTAR = 7;
+constexpr auto USAR_CHAVE_PRIVADA = 8;
+
+/*
+TODO
+-> Passar as assinaturas das funções para um arquivo .hpp e a implementação para um arquivo .cpp
+-> Validar input 
+-> Refatorar código repetido
+*/
 
 using namespace std;
+
+void menu(void);
+void criptografar(unique_ptr<RSA>& rsa_session);
+void decriptografar(unique_ptr<RSA>& rsa_session);
 
 int main(int argc, char *argv[])
 {
@@ -132,7 +142,22 @@ void criptografar (unique_ptr<RSA>& rsa_session)
         break;
         case USAR_CHAVE_PUBLICA:
         {
-            //TODO-> TERMINAR
+            long long int public_key,n;
+            cout << "Digite o valor da chave pública\n";
+            cout << ":";
+            cin >> public_key;
+            cout << "\nDigite o valor de N\n";
+            cout << ":";
+            cin >> n;
+            RSA rsa(public_key,n,"PUBLIC_KEY");
+            cout << "\nDigite o nome do arquivo de imagem completo\n";
+            cout << ":";
+            cin >> nome_arquivo_imagem;
+            imagem_array = RSA::read_image(nome_arquivo_imagem);
+            cout << "\nDigite o nome do arquivo de imagem criptografado\n";
+            cout << ":";
+            rsa.write_to_file(nome_arquivo_criptografado,rsa.encrypt(vector<long long int>(imagem_array.begin(),imagem_array.end())));
+            cout << "Imagem criptografada com sucesso!\n";
         }
         break;
         case VOLTAR:
