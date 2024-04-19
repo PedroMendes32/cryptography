@@ -1,6 +1,9 @@
 #include "RSA.hpp"
 #include <iostream>
-#include <memory>
+constexpr auto GERAR_CHAVES = 0;
+constexpr auto CRIPTOGRAFAR = 1;
+constexpr auto DECRIPTOGRAFAR = 2;
+constexpr auto SAIR = 3;
 
 using namespace std;
 
@@ -9,6 +12,8 @@ int main(int argc, char* argv[])
     bool sair = false;
     while (!sair)
     {
+        string nome_arquivo_original, nome_arquivo_final;
+        long long int n, key;
         short int option;
         cout << "Escolha uma opção:\n";
         cout << "0. Gerar par de chaves\n";
@@ -24,17 +29,15 @@ int main(int argc, char* argv[])
         }
         switch (option)
         {
-            case 0:
+            case GERAR_CHAVES:
             {
                 RSA rsa(100, 9000); // TODO -> Quando o limite inferior e superior são muito grandes a criptografia apresenta problemas
                 rsa.write_keys_to_file("Keys.txt");
                 cout << "Par de chaves gerado!\n";
             }
             break;
-            case 1:
+            case CRIPTOGRAFAR:
             {
-                string nome_arquivo_original, nome_arquivo_final;
-                long long int n, key;
                 cout << "Digite a chave publica: ";
                 cin >> key;
                 cout << "Digite o valor de n: ";
@@ -50,10 +53,8 @@ int main(int argc, char* argv[])
                 rsa.write_to_file(nome_arquivo_final, image_encrypt_array);
             }
             break;
-            case 2:
+            case DECRIPTOGRAFAR:
             {
-                string nome_arquivo_original, nome_arquivo_final;
-                long long int n, key;
                 cout << "Digite a chave privada: ";
                 cin >> key;
                 cout << "Digite o valor de n: ";
@@ -69,7 +70,7 @@ int main(int argc, char* argv[])
                 RSA::write_image(nome_arquivo_final, image_decrypt);
             }
             break;
-            case 3:
+            case SAIR:
             {
                 sair = true;
                 break;
