@@ -1,177 +1,85 @@
-#include"rsa.hpp"
-#include<Windows.h>
-#include<memory>
-#include<string>
-#include<locale.h>
-constexpr auto CRIPTOGRAFAR = 1 ;
-constexpr auto DECRIPTOGRAFAR = 2;
-constexpr auto SAIR = 3;
-constexpr auto GERAR_CHAVES = 4;
-constexpr auto USAR_CHAVE_ATUAL = 5;
-constexpr auto USAR_CHAVE_PUBLICA = 6;
-constexpr auto VOLTAR = 7;
-constexpr auto USAR_CHAVE_PRIVADA = 8;
-
-/*
-TODO
--> Passar as assinaturas das funções para um arquivo .hpp e a implementação para um arquivo .cpp
--> Validar input 
--> Refatorar código repetido
-*/
+#include "RSA.hpp"
+#include <iostream>
+#include <memory>
 
 using namespace std;
 
-void menu(void);
-void criptografar(unique_ptr<RSA>& rsa_session);
-void decriptografar(unique_ptr<RSA>& rsa_session);
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    setlocale(LC_ALL,"Portuguese");
-    unique_ptr<RSA> rsa_session;
     bool sair = false;
-    int escolha;
-
     while (!sair)
     {
-        menu();
-        cin >> escolha;
-        
-        switch (escolha)
+        short int option;
+        cout << "Escolha uma opção:\n";
+        cout << "0. Gerar par de chaves\n";
+        cout << "1. Criptografar imagem\n";
+        cout << "2. Descriptografar imagem\n";
+        cout << "3. Sair\n";
+        cin >> option;
+
+        if (cin.fail())
         {
-            case CRIPTOGRAFAR:
+            cout << "Erro na entrada de valores!\n";
+            exit(EXIT_FAILURE);
+        }
+        switch (option)
+        {
+            case 0:
             {
-                criptografar(rsa_session);
+                RSA rsa(100, 9000); // TODO -> Quando o limite inferior e superior são muito grandes a criptografia apresenta problemas
+                rsa.write_keys_to_file("Keys.txt");
+                cout << "Par de chaves gerado!\n";
             }
             break;
-            case DECRIPTOGRAFAR:
+            case 1:
             {
-                decriptografar(rsa_session);
+                string nome_arquivo_original, nome_arquivo_final;
+                long long int n, key;
+                cout << "Digite a chave publica: ";
+                cin >> key;
+                cout << "Digite o valor de n: ";
+                cin >> n;
+                RSA rsa(key, n, "PUBLIC_KEY");
+                cout << "Digite o nome do arquivo original: ";
+                cin >> nome_arquivo_original;
+                cout << "Digite o nome do arquivo final: ";
+                cin >> nome_arquivo_final;
+                vector<unsigned char> image = RSA::read_image(nome_arquivo_original);
+                vector<long long int> image_array_int(image.begin(), image.end());
+                vector<long long int> image_encrypt_array = rsa.encrypt(image_array_int);
+                rsa.write_to_file(nome_arquivo_final, image_encrypt_array);
             }
             break;
-            case SAIR:
+            case 2:
+            {
+                string nome_arquivo_original, nome_arquivo_final;
+                long long int n, key;
+                cout << "Digite a chave privada: ";
+                cin >> key;
+                cout << "Digite o valor de n: ";
+                cin >> n;
+                RSA rsa(key, n, "PRIVATE_KEY");
+                cout << "Digite o nome do arquivo original: ";
+                cin >> nome_arquivo_original;
+                cout << "Digite o nome do arquivo final: ";
+                cin >> nome_arquivo_final;
+                vector<long long int> image_encrypt = rsa.read_from_file(nome_arquivo_original);
+                vector<long long int> image_decrypt_array = rsa.decrypt(image_encrypt);
+                vector<unsigned char> image_decrypt(image_decrypt_array.begin(), image_decrypt_array.end());
+                RSA::write_image(nome_arquivo_final, image_decrypt);
+            }
+            break;
+            case 3:
             {
                 sair = true;
+                break;
             }
             default:
             {
-                cout << "Opção inválida!\n";
+                cout << "Opção inválida. Tente novamente.\n";
             }
+            break;
         }
     }
-
     return 0;
-}
-
-void menu (void)
-{
-    cout << "********************************\n"
-         << "*       CRIPTOGRAFIA RSA       *\n"
-         << "*                              *\n"
-         << "* 1 -> Criptografar imagem.    *\n"
-         << "* 2 -> Decriptografar imagem.  *\n"
-         << "* 3 -> Sair do programa.       *\n"
-         << "********************************\n"
-         << ": ";
-}
-
-void criptografar (unique_ptr<RSA>& rsa_session)
-{
-    int escolha;
-    string nome_arquivo_imagem,nome_arquivo_criptografado;
-    vector<unsigned char> imagem_array;
-
-    cout<< "*******************************\n"
-        << "*     CRIPTOGRAFAR IMAGEM     *\n"
-        << "*                             *\n"
-        << "* 4 -> Gerar par de chaves.   *\n"
-        << "* 5 -> Usar chaves atuais.    *\n"
-        << "* 6 -> Usar chave pública.    *\n"
-        << "* 7 -> Voltar.                *\n"
-        << "*******************************\n"
-        << ": ";
-
-    cin >> escolha;
-
-    switch (escolha)
-    {
-        case GERAR_CHAVES:
-        {
-            if (rsa_session != nullptr)
-            {
-                cout << "Já existem chaves geradas para essa sessão!\n";
-                return;
-            }
-            try
-            {
-                rsa_session = make_unique<RSA>(9999999,999999999999);
-                cout << "Par de chaves gerado!\n";
-                rsa_session.get()->write_keys_to_file("rsa_keys.txt");
-            }
-            catch(const std::exception& ex)
-            {
-                std::cerr << ex.what() << '\n';
-            }
-        }
-        break;
-
-        case USAR_CHAVE_ATUAL:
-        {
-            if (rsa_session == nullptr)
-            {
-                cout << "Não existe chaves geradas para essa sessão!\n";
-                return;
-            }
-            try
-            {
-                cout << "Digite o nome do arquivo de imagem completo\n";
-                cout << ":";
-                cin >> nome_arquivo_imagem;
-                imagem_array = RSA::read_image(nome_arquivo_imagem);
-                cout << "\nDigite o nome do arquivo de imagem criptografado\n";
-                cout << ":";
-                cin >> nome_arquivo_criptografado;
-                rsa_session.get()->write_to_file(nome_arquivo_criptografado,rsa_session.get()->encrypt(vector<long long int>(imagem_array.begin(),imagem_array.end())));
-                cout << "Imagem criptografada com sucesso!\n";
-            }
-            catch(const std::exception& ex)
-            {
-                std::cerr << ex.what() << '\n';
-            }
-        }
-        break;
-        case USAR_CHAVE_PUBLICA:
-        {
-            long long int public_key,n;
-            cout << "Digite o valor da chave pública\n";
-            cout << ":";
-            cin >> public_key;
-            cout << "\nDigite o valor de N\n";
-            cout << ":";
-            cin >> n;
-            RSA rsa(public_key,n,"PUBLIC_KEY");
-            cout << "\nDigite o nome do arquivo de imagem completo\n";
-            cout << ":";
-            cin >> nome_arquivo_imagem;
-            imagem_array = RSA::read_image(nome_arquivo_imagem);
-            cout << "\nDigite o nome do arquivo de imagem criptografado\n";
-            cout << ":";
-            rsa.write_to_file(nome_arquivo_criptografado,rsa.encrypt(vector<long long int>(imagem_array.begin(),imagem_array.end())));
-            cout << "Imagem criptografada com sucesso!\n";
-        }
-        break;
-        case VOLTAR:
-        {
-            return;
-        }
-        default:
-        {
-            cout << "Opção inválida!\n";
-        }
-    }
-}
-
-void decriptografar (unique_ptr<RSA>& rsa_session)
-{
-    //TODO -> Terminar a rotina
 }
