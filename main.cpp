@@ -1,5 +1,7 @@
 #include "RSA.hpp"
 #include <iostream>
+#include <cstdlib>
+#include <clocale>
 constexpr auto GERAR_CHAVES = 0;
 constexpr auto CRIPTOGRAFAR = 1;
 constexpr auto DECRIPTOGRAFAR = 2;
@@ -9,6 +11,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    setlocale(LC_ALL,"Portuguese");
     bool sair = false;
     while (!sair)
     {
@@ -17,9 +20,10 @@ int main(int argc, char* argv[])
         short int option;
         cout << "Escolha uma opção:\n";
         cout << "0. Gerar par de chaves\n";
-        cout << "1. Criptografar imagem\n";
-        cout << "2. Descriptografar imagem\n";
+        cout << "1. Criptografar arquivo\n";
+        cout << "2. Descriptografar arquivo\n";
         cout << "3. Sair\n";
+        cout << ":";
         cin >> option;
 
         if (cin.fail())
@@ -38,36 +42,36 @@ int main(int argc, char* argv[])
             break;
             case CRIPTOGRAFAR:
             {
-                cout << "Digite a chave publica: ";
+                cout << "\nDigite a chave pública:";
                 cin >> key;
-                cout << "Digite o valor de n: ";
+                cout << "\nDigite o valor de n:";
                 cin >> n;
                 RSA rsa(key, n, "PUBLIC_KEY");
-                cout << "Digite o nome do arquivo original: ";
+                cout << "\nDigite o nome do arquivo original:";
                 cin >> nome_arquivo_original;
-                cout << "Digite o nome do arquivo final: ";
+                cout << "\nDigite o nome do arquivo final:";
                 cin >> nome_arquivo_final;
-                vector<unsigned char> image = RSA::read_image(nome_arquivo_original);
-                vector<long long int> image_array_int(image.begin(), image.end());
-                vector<long long int> image_encrypt_array = rsa.encrypt(image_array_int);
-                rsa.write_to_file(nome_arquivo_final, image_encrypt_array);
+                vector<unsigned char> file = RSA::read_image(nome_arquivo_original);
+                vector<long long int> file_array_int(file.begin(), file.end());
+                vector<long long int> file_encrypt_array = rsa.encrypt(file_array_int);
+                rsa.write_to_file(nome_arquivo_final, file_encrypt_array);
             }
             break;
             case DECRIPTOGRAFAR:
             {
-                cout << "Digite a chave privada: ";
+                cout << "\nDigite a chave privada:";
                 cin >> key;
-                cout << "Digite o valor de n: ";
+                cout << "\nDigite o valor de n:";
                 cin >> n;
                 RSA rsa(key, n, "PRIVATE_KEY");
-                cout << "Digite o nome do arquivo original: ";
+                cout << "\nDigite o nome do arquivo original:";
                 cin >> nome_arquivo_original;
-                cout << "Digite o nome do arquivo final: ";
+                cout << "\nDigite o nome do arquivo final:";
                 cin >> nome_arquivo_final;
-                vector<long long int> image_encrypt = rsa.read_from_file(nome_arquivo_original);
-                vector<long long int> image_decrypt_array = rsa.decrypt(image_encrypt);
-                vector<unsigned char> image_decrypt(image_decrypt_array.begin(), image_decrypt_array.end());
-                RSA::write_image(nome_arquivo_final, image_decrypt);
+                vector<long long int> file_encrypt = rsa.read_from_file(nome_arquivo_original);
+                vector<long long int> file_decrypt_array = rsa.decrypt(file_encrypt);
+                vector<unsigned char> file_decrypt(file_decrypt_array.begin(), file_decrypt_array.end());
+                RSA::write_image(nome_arquivo_final, file_decrypt);
             }
             break;
             case SAIR:
@@ -77,10 +81,12 @@ int main(int argc, char* argv[])
             }
             default:
             {
-                cout << "Opção inválida. Tente novamente.\n";
+                cout << "Opção inválida. Tente novamente.\n\n";
+                system("pause");
             }
             break;
         }
+        system("cls");
     }
     return 0;
 }
