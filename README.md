@@ -1,6 +1,6 @@
 # RSA - Implementação do Algoritmo de Criptografia RSA
 
-A classe `RSA` implementa o algoritmo de criptografia RSA (Rivest-Shamir-Adleman) para criptografia e decriptografia de imagens sem a utilização de bibliotecas prontas. O RSA é um dos algoritmos de criptografia assimétrica mais amplamente utilizados para comunicações seguras na internet, como criptografia de dados, assinaturas digitais e troca de chaves.
+A classe `RSA` implementa o algoritmo de criptografia RSA (Rivest-Shamir-Adleman) para criptografia e decriptografia de arquivos sem a utilização de bibliotecas prontas. O RSA é um dos algoritmos de criptografia assimétrica mais amplamente utilizados para comunicações seguras na internet, como criptografia de dados, assinaturas digitais e troca de chaves.
 
 ## Principais Funções
 
@@ -26,7 +26,7 @@ Esses métodos permitem acessar e modificar os atributos `n`, `public_key` e `pr
 std::vector<long long int> encrypt(const std::vector<long long int>& data) const;
 std::vector<long long int> decrypt(const std::vector<long long int>& encrypted_data) const;
 ```
-Esses métodos permitem criptografar e descriptografar imagens usando as chaves pública e privada, respectivamente.
+Esses métodos permitem criptografar e descriptografar arquivos usando as chaves pública e privada, respectivamente.
 
 ### Operações de Arquivo
 ```cpp
@@ -36,7 +36,7 @@ void write_keys_to_file(const std::string& filename) const;
 static std::vector<unsigned char> read_image(const std::string& filename);
 static void write_image(const std::string& filename, const std::vector<unsigned char>& data);
 ```
-Esses métodos permitem escrever dados em um arquivo, ler dados de um arquivo e manipular imagens em formato binário. `write_keys_to_file` escreve as chaves pública e privada em um arquivo.
+Esses métodos permitem escrever dados em um arquivo, ler dados de um arquivo e manipular arquivos em formato binário. `write_keys_to_file` escreve as chaves pública e privada em um arquivo.
 
 ## Uso
-Para usar a classe `RSA`, basta incluir o cabeçalho `RSA.hpp` em seu projeto e criar uma instância, passando os limites desejados para a geração das chaves. Em seguida, você pode criptografar e descriptografar imagens, além de realizar operações de arquivo conforme necessário.
+Para usar a classe `RSA`, basta incluir o cabeçalho `RSA.hpp` em seu projeto e criar uma instância, passando os limites desejados para a geração das chaves. Em seguida, você pode criptografar e descriptografar arquivos, além de realizar operações de arquivo conforme necessário.
