@@ -37,7 +37,7 @@ public:
     inline void print_public_key() const;
     inline void print_private_key() const;
     void write_keys_to_file(const std::string& filename) const;
-    static std::vector<unsigned char> read_image(const std::string& filename);
-    static void write_image(const std::string& filename, const std::vector<unsigned char>& data);
+    static std::vector<unsigned char> read_file(const std::string& filename);
+    static void write_file(const std::string& filename, const std::vector<unsigned char>& data);
 };
 

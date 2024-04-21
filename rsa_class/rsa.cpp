@@ -281,12 +281,12 @@ void RSA::write_keys_to_file(const std::string& filename) const
     file << "N: " << n << "\n";
 }
 
-std::vector<unsigned char> RSA::read_image(const std::string& filename)
+std::vector<unsigned char> RSA::read_file(const std::string& filename)
 {
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
     if (!file.is_open())
     {
-        throw std::runtime_error("Erro ao abrir o arquivo de imagem para leitura.");
+        throw std::runtime_error("Erro ao abrir o arquivo para leitura.");
     }
 
     std::streamsize size = file.tellg();
@@ -295,22 +295,22 @@ std::vector<unsigned char> RSA::read_image(const std::string& filename)
     std::vector<unsigned char> buffer(size);
     if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
     {
-        throw std::runtime_error("Erro ao ler os dados do arquivo de imagem.");
+        throw std::runtime_error("Erro ao ler os dados do arquivo.");
     }
 
     return buffer;
 }
 
-void RSA::write_image(const std::string& filename, const std::vector<unsigned char>& data)
+void RSA::write_file(const std::string& filename, const std::vector<unsigned char>& data)
 {
     std::ofstream file(filename, std::ios::binary);
     if (!file.is_open())
     {
-        throw std::runtime_error("Erro ao abrir o arquivo de imagem para escrita.");
+        throw std::runtime_error("Erro ao abrir o arquivo para escrita.");
     }
 
     if (!file.write(reinterpret_cast<const char*>(data.data()), data.size()))
     {
-        throw std::runtime_error("Erro ao escrever os dados no arquivo de imagem.");
+        throw std::runtime_error("Erro ao escrever os dados no arquivo.");
     }
 }
