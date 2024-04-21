@@ -5,19 +5,23 @@
 #include <vector>
 #include <stdexcept>
 #include <random>
-
+#include <ctime>
+#include <optional>
+#include <string>
 class RSA final
 {
 private:
     long long int public_key;
     long long int private_key;
     long long int n;
-
+    mutable std::ofstream log;
     bool is_prime(long long int n) const;
     long long int generate_prime(long long int limite_inferior, long long int limite_superior, std::mt19937& rng) const;
     long long int gcd(long long int a, long long int b) const;
     long long int mod_inverse(long long int a, long long int m) const;
     long long int mod_pow(long long int base, long long int exponent, long long int modulus) const;
+    void generate_log (const std::string& method_name, const std::optional<std::string>& msg) const;
+    struct tm get_time (void) const;
 
 public:
     RSA(void) = delete;
