@@ -4,9 +4,9 @@
 #include<vector>
 #include<Windows.h>
 
-HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-WORD originalAttrs;
+static HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+static CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+static WORD originalAttrs;
 
 void menu (void);
 void gerar_chaves (void);
