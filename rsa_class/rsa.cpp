@@ -11,11 +11,9 @@ bool RSA::is_prime(long long int n) const
         {
             if (n % i == 0 || n % (i + 2) == 0)
             {
-                generate_log("Fim do método is_prime","Método Bem-sucedido");
                 return false;
             }
         }
-        generate_log("Fim do método is_prime","Método Bem-sucedido");
         return true;
     }
     catch(const std::exception& ex)
@@ -28,7 +26,6 @@ bool RSA::is_prime(long long int n) const
 
 long long int RSA::generate_prime(long long int limite_inferior, long long int limite_superior, std::mt19937& rng) const
 {
-    generate_log("Início do método generate_prime",std::nullopt);
     try
     {
         std::uniform_int_distribution<long long int> dist(limite_inferior, limite_superior);
@@ -38,7 +35,6 @@ long long int RSA::generate_prime(long long int limite_inferior, long long int l
             prime_candidate = dist(rng);
         }
         while (!is_prime(prime_candidate));
-        generate_log("Fim do método generate_prime","Método Bem-sucedido");
         return prime_candidate;
     }
     catch(const std::exception& ex)
@@ -49,7 +45,7 @@ long long int RSA::generate_prime(long long int limite_inferior, long long int l
     }
 }
 
-long long int RSA::gcd(long long int a, long long int b) const //obs: como o método é recursivo, não é interessante gerar o log de início
+long long int RSA::gcd(long long int a, long long int b) const
 {
     try
     {
@@ -345,14 +341,14 @@ void RSA::write_file(const std::string& filename, const std::vector<unsigned cha
 void RSA::generate_log (const std::string& method_name, const std::optional<std::string>& msg) const
 {
     struct tm time = get_time();
-    log << "----------------------------"; 
+    log << "\n----------------------------"; 
     log << "\n\n" << method_name << "\n";
     log << "[ Hora: " << time.tm_hour << " Minuto: " << time.tm_min << " Segundo: " << time.tm_sec << " ]";
     if (msg.has_value())
     {
         log << "\nStatus: " << msg.value();
     }
-    log << "\n\n----------------------------"; 
+    log << "\n\n----------------------------\n\n"; 
 }
 
 struct tm RSA::get_time(void) const
