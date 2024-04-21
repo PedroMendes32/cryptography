@@ -98,7 +98,6 @@ long long int RSA::mod_inverse(long long int a, long long int m) const
 
 long long int RSA::mod_pow(long long int base, long long int exponent, long long int modulus) const
 {
-    generate_log("Início do método mod_pow",std::nullopt);
     try
     {
         long long int result = 1;
@@ -112,7 +111,6 @@ long long int RSA::mod_pow(long long int base, long long int exponent, long long
             exponent = exponent >> 1;
             base = (base * base) % modulus;
         }
-        generate_log("Fim do método mod_pow","Método Bem-sucedido");
         return result;
     }
     catch(const std::exception& ex)
