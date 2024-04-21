@@ -19,15 +19,12 @@ void gerar_chaves (void)
     {
         RSA rsa(100, 9000); 
         rsa.write_keys_to_file("Keys.txt");
-        set_console_sucess();
         std::cout << "Par de chaves gerado!\n\n";
     }
     catch(const std::exception& ex)
     {
-        set_console_error();
         std::cerr << "Erro: " << ex.what() << std::endl;
     }
-    reset_config_console();
 }
 
 void criptografar (long long int& key, long long int& n, std::string& nome_arquivo_original, std::string& nome_arquivo_final)
@@ -47,15 +44,12 @@ void criptografar (long long int& key, long long int& n, std::string& nome_arqui
         std::vector<long long int> file_array_int(file.begin(), file.end());
         std::vector<long long int> file_encrypt_array = rsa.encrypt(file_array_int);
         rsa.write_to_file(nome_arquivo_final, file_encrypt_array);
-        set_console_sucess();
         std::cout << "Arquivo criptografado com sucesso!\n\n";
     }
     catch(const std::exception& ex)
     {
-        set_console_error();
         std::cerr << "Erro: "<< ex.what() << std::endl;
     }
-    reset_config_console();
 }
 
 void decriptografar (long long int& key, long long int& n, std::string& nome_arquivo_original, std::string& nome_arquivo_final)
@@ -75,30 +69,12 @@ void decriptografar (long long int& key, long long int& n, std::string& nome_arq
         std::vector<long long int> file_decrypt_array = rsa.decrypt(file_encrypt);
         std::vector<unsigned char> file_decrypt(file_decrypt_array.begin(), file_decrypt_array.end());
         RSA::write_file(nome_arquivo_final, file_decrypt);
-        set_console_sucess();
         std::cout << "Arquivo decriptografado com sucesso!\n\n";
     }
     catch(const std::exception& ex)
     {
-        set_console_error();
         std::cerr << "Erro: " <<  ex.what() << std::endl;
     }
-    reset_config_console();
-}
-
-void reset_config_console(void)
-{
-    SetConsoleTextAttribute(hConsole, originalAttrs);
-}
-
-void set_console_sucess (void)
-{
-    SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
-}
-
-void set_console_error (void)
-{
-    SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
 }
 
 

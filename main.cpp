@@ -15,9 +15,7 @@ int main(int argc, char* argv[])
 {
     setlocale(LC_ALL,"Portuguese");
     bool sair = false;
-    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
-	originalAttrs = consoleInfo.wAttributes;
-    
+
     while (!sair)
     {
         string nome_arquivo_original, nome_arquivo_final;
@@ -30,6 +28,7 @@ int main(int argc, char* argv[])
         if (cin.fail())
         {
             cout << "Erro na entrada de valores!\n";
+            system("pause");
             exit(EXIT_FAILURE);
         }
         switch (option)

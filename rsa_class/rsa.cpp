@@ -2,7 +2,6 @@
 
 bool RSA::is_prime(long long int n) const
 {
-    generate_log("Início do método is_prime",std::nullopt);
     try
     {
         if (n <= 1) return false;
@@ -350,7 +349,7 @@ void RSA::generate_log (const std::string& method_name, const std::optional<std:
     struct tm time = get_time();
     log << "----------------------------"; 
     log << "\n\n" << method_name << "\n";
-    log << "Hora: " << time.tm_hour << "Minuto: " << time.tm_min << "Segundos: " << time.tm_sec;
+    log << "[ Hora: " << time.tm_hour << " Minuto: " << time.tm_min << " Segundo: " << time.tm_sec << " ]";
     if (msg.has_value())
     {
         log << "\nStatus: " << msg.value();
