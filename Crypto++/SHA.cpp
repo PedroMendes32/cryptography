@@ -63,7 +63,7 @@ void menu(void)
 {
     crypto_info();
     cout << "1 - Gerar Hash de um arquivo\n";
-    cout << "2 - Verificar integridade de dados do arquivo\n";
+    cout << "2 - Comparar conteúdo de arquivos \n";
     cout << "3 - Sair\n";
     cout << ":";
 }
