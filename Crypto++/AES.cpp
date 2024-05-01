@@ -117,12 +117,12 @@ int main(int argc, char *argv[])
                             exit(EXIT_FAILURE);
                         }
                         AES_Algorithm::writeKeyToFile(key);
-                        cout << "Chave gerada com sucesso!\n\n";
+                        cout << "\n\nChave gerada com sucesso!\n\n";
                     }
                 }
                 catch (const std::exception& ex)
                 {
-                    runtime_error(ex.what());
+                    cerr << "\n\nErro: " << ex.what() << "\n\n";
                 }
             }
             break;
@@ -155,12 +155,12 @@ int main(int argc, char *argv[])
                     {
                         exit(EXIT_FAILURE);
                     }
-                    cout << "Arquivo criptografado com sucesso!\n\n";
+                    cout << "\n\nArquivo criptografado com sucesso!\n\n";
                     
                 }
                 catch (const std::exception& ex)
                 {
-                    runtime_error(ex.what());
+                    cerr << "\n\nErro: " << ex.what() << "\n\n";
                 }
             }
             break;
@@ -193,12 +193,12 @@ int main(int argc, char *argv[])
                     {
                         exit(EXIT_FAILURE);
                     }
-                    cout << "Arquivo decriptografado com sucesso!\n\n";
+                    cout << "\n\nArquivo decriptografado com sucesso!\n\n";
 
                 }
                 catch (const std::exception& ex)
                 {
-                    runtime_error(ex.what());
+                    cerr << "\n\nErro: " << ex.what() << "\n\n";
                 }
             }
             break;
