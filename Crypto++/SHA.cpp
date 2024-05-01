@@ -136,9 +136,9 @@ int main(void)
             {
                 exit(EXIT_FAILURE);
             }
-            system("pause");
-            system("cls");
         }
+        system("pause");
+        system("cls");
     }
     return 0;
 }
