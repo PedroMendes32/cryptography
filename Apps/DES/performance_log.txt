@@ -1,0 +1,3 @@
+Key Generation: 0.0059741 seconds, CPU Usage: 3.56495e-312%, Memory Usage: 5832704 bytes
+Encryption: 0.016964 seconds, CPU Usage: 0%, Memory Usage: 5869568 bytes
+Decryption: 0.0153672 seconds, CPU Usage: 0%, Memory Usage: 5869568 bytes

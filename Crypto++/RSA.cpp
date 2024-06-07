@@ -1,37 +1,91 @@
-#include <rsa.h>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <chrono>
+#include <windows.h>
+#include <pdh.h>
+#include <psapi.h>
+#include <modes.h>
 #include <osrng.h>
+#include <locale.h>
+#include <iomanip> 
+#include <rsa.h>
 #include <base64.h>
 #include <files.h>
 #include <cryptlib.h>
 #include <filters.h>
-#include <iostream>
-#include <fstream>
+
+
+#pragma comment(lib, "Pdh.lib")
 
 using namespace CryptoPP;
 using namespace std;
 
+static PDH_HQUERY cpuQuery;
+static PDH_HCOUNTER cpuTotal;
+
+void init(void)
+{
+    PdhOpenQuery(NULL, NULL, &cpuQuery);
+    PdhAddEnglishCounter(cpuQuery, L"\\Processor(_Total)\\% Processor Time", NULL, &cpuTotal);
+    PdhCollectQueryData(cpuQuery);
+}
+
+double getCurrentValue(void)
+{
+    PDH_FMT_COUNTERVALUE counterVal;
+
+    PdhCollectQueryData(cpuQuery);
+    PdhGetFormattedCounterValue(cpuTotal, PDH_FMT_DOUBLE, NULL, &counterVal);
+    return counterVal.doubleValue;
+}
+
+SIZE_T getCurrentMemoryUsageProcess(void)
+{
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+    SIZE_T physMemUsedByMe = pmc.WorkingSetSize;
+    return physMemUsedByMe;
+}
+
+/*
+* Fonte utilizada para criação dos métodos init(), getCurrentValue() e getCurrentMemoryUsage()
+* https://stackoverflow.com/questions/63166/how-to-determine-cpu-and-memory-consumption-from-inside-a-process/
+*/
+
 namespace RSA_Algorithm
 {
-    void GenerateRSAKeys(const string& privateKeyFile, const string& publicKeyFile, unsigned int bits)
+    /// <summary>
+    /// Cria logs de desempenho das operações.
+    /// </summary>
+    /// <param name="operation ->">Descrição da operação realizada.</param>
+    /// <param name="timeTaken ->">Tempo decorrido para a operação.</param>
+    /// <param name="cpuUsage ->">Uso de CPU durante a operação.</param>
+    /// <param name="memoryUsage ->">Uso de memória durante a operação.</param>
+    void logPerformance(const string& operation, const double& timeTaken, const double& cpuUsage, const SIZE_T& memoryUsage)
     {
-        AutoSeededRandomPool rng;
-
-        InvertibleRSAFunction params;
-        params.Initialize(rng, bits);
-
-        RSA::PrivateKey privateKey(params);
-        Base64Encoder privateKeySink(new FileSink(privateKeyFile.c_str()));
-        privateKey.DEREncode(privateKeySink);
-        privateKeySink.MessageEnd();
-
-        RSA::PublicKey publicKey(params);
-        Base64Encoder publicKeySink(new FileSink(publicKeyFile.c_str()));
-        publicKey.DEREncode(publicKeySink);
-        publicKeySink.MessageEnd();
+        ofstream logFile("performance_log.txt", ios::app);
+        if (logFile.is_open())
+        {
+            logFile << operation << ": "
+                << setprecision(6) << timeTaken << " seconds, ";
+            logFile << "CPU Usage: " << setprecision(6) << cpuUsage << "%, ";
+            
+            logFile << "Memory Usage: " << memoryUsage << " bytes" << endl;
+        }
+        logFile.close();
     }
 
-    void EncryptFile(const string& publicKeyFile, const string& inputFile, const string& encryptedFile)
+    /// <summary>
+    /// Criptografa um arquivo texto usando o algoritmo RSA.
+    /// </summary>
+    /// <param name="publicKeyFile ->">Nome do arquivo .key da chave privada.</param>
+    /// <param name="inputFile ->">Nome do arquivo que será criptografado.</param>
+    /// <param name="encryptedFile ->">Nome do arquivo criptografado.</param>
+    void EncryptFileRSA(const string& publicKeyFile, const string& inputFile, const string& encryptedFile)
     {
+        auto start = chrono::high_resolution_clock::now();
+
         RSA::PublicKey publicKey;
         FileSource publicKeyFileSource(publicKeyFile.c_str(), true, new Base64Decoder);
         publicKey.BERDecode(publicKeyFileSource);
@@ -56,10 +110,26 @@ namespace RSA_Algorithm
         ofstream ofs(encryptedFile, ios::binary);
         ofs.write(reinterpret_cast<char*>(&encryptText[0]), encryptText.size());
         ofs.close();
+
+        auto end = chrono::high_resolution_clock::now();
+        chrono::duration<double> duration = end - start;
+
+        double cpuUsage = getCurrentValue();
+        SIZE_T memoryUsage = getCurrentMemoryUsageProcess();
+
+        logPerformance("Encryption", duration.count(), cpuUsage, memoryUsage);
     }
 
-    void DecryptFile(const string& privateKeyFile, const string& encryptedFile, const string& decryptedFile)
+    /// <summary>
+    /// Descriptografa um arquivo criptografado usando o algoritmo RSA.
+    /// </summary>
+    /// <param name="privateKeyFile ->">Nome do arquivo .key da chave privada</param>
+    /// <param name="encryptedFile ->">Nome do arquivo criptografado.</param>
+    /// <param name="decryptedFile ->">Nome do arquivo final descriptografado.</param>
+    void DecryptFileRSA(const string& privateKeyFile, const string& encryptedFile, const string& decryptedFile)
     {
+        auto start = chrono::high_resolution_clock::now();
+
         RSA::PrivateKey privateKey;
         FileSource privateKeyFileSource(privateKeyFile.c_str(), true, new Base64Decoder);
         privateKey.BERDecode(privateKeyFileSource);
@@ -90,8 +160,47 @@ namespace RSA_Algorithm
         ofstream ofs(decryptedFile);
         ofs.write(reinterpret_cast<char*>(&decryptText[0]), decryptText.size());
         ofs.close();
+
+        auto end = chrono::high_resolution_clock::now();
+        chrono::duration<double> duration = end - start;
+
+        double cpuUsage = getCurrentValue();
+        SIZE_T memoryUsage = getCurrentMemoryUsageProcess();
+
+        logPerformance("Decryption", duration.count(), cpuUsage, memoryUsage);
     }
-}
+
+    /// <summary>
+    /// Gera o par de chaves RSA.
+    /// </summary>
+    /// <param name="privateKeyFile ->">Arquivo .key da chave privada.</param>
+    /// <param name="publicKeyFile ->">Arquivo .key da chave pública.</param>
+    /// <param name="bits ->">Tamanho em bits da chave RSA.</param>
+    void GenerateRSAKeys(const string& privateKeyFile, const string& publicKeyFile, unsigned int bits)
+    {
+        auto start = chrono::high_resolution_clock::now();
+
+        AutoSeededRandomPool rng;
+        InvertibleRSAFunction params;
+        params.Initialize(rng, bits);
+        RSA::PrivateKey privateKey(params);
+        Base64Encoder privateKeySink(new FileSink(privateKeyFile.c_str()));
+        privateKey.DEREncode(privateKeySink);
+        privateKeySink.MessageEnd();
+        RSA::PublicKey publicKey(params);
+        Base64Encoder publicKeySink(new FileSink(publicKeyFile.c_str()));
+        publicKey.DEREncode(publicKeySink);
+        publicKeySink.MessageEnd();
+
+        auto end = chrono::high_resolution_clock::now();
+        chrono::duration<double> duration = end - start;
+
+        double cpuUsage = getCurrentValue();
+        SIZE_T memoryUsage = getCurrentMemoryUsageProcess();
+
+        logPerformance("Key Generation", duration.count(), cpuUsage, memoryUsage);
+    }
+};
 
 inline void crypto_info(void)
 {
@@ -123,8 +232,8 @@ void menu_key_size(void)
     std::cout << ":";
 }
 
-int main(void) 
-{              
+int main(void)
+{
     setlocale(LC_ALL, "Portuguese");
     short int option;
     const string privateKeyFile = "rsa-private.key";
@@ -138,104 +247,104 @@ int main(void)
 
         switch (option)
         {
-            case 1:
+        case 1:
+        {
+            try
             {
-                try
+                system("cls");
+                menu_key_size();
+                cin >> option;
+                if (!cin.fail())
                 {
-                    system("cls");
-                    menu_key_size();
-                    cin >> option;
-                    if (!cin.fail())
+                    unsigned int bits;
+                    switch (option)
                     {
-                        unsigned int bits;
-                        switch (option)
-                        {
-                            case 1:
-                            {
-                                bits = 1024;
-                            }
-                            break;
-                            case 2:
-                            {
-                                bits = 2048;
-                            }
-                            break;
-                            case 3:
-                            {
-                                bits = 4096;
-                            }
-                            break;
-                            case 4:
-                            {
-                                bits = 8192;
-                            }
-                            break;
-                            case 5:
-                            {
-                                bits = 16384;
-                            }
-                            break;
-                            case 6:
-                            {
-                                bits = 32768;
-                            }
-                            break;
-                        }
-
-                        RSA_Algorithm::GenerateRSAKeys(privateKeyFile, publicKeyFile, bits);
-                        std::cout << "\n\n Par de chaves gerado com sucesso!\n\n";
+                    case 1:
+                    {
+                        bits = 1024;
                     }
-                }
-                catch (const std::exception& ex)
-                {
-                    cerr << "\n\nErro: " << ex.what() << "\n\n";
+                    break;
+                    case 2:
+                    {
+                        bits = 2048;
+                    }
+                    break;
+                    case 3:
+                    {
+                        bits = 4096;
+                    }
+                    break;
+                    case 4:
+                    {
+                        bits = 8192;
+                    }
+                    break;
+                    case 5:
+                    {
+                        bits = 16384;
+                    }
+                    break;
+                    case 6:
+                    {
+                        bits = 32768;
+                    }
+                    break;
+                    }
+
+                    RSA_Algorithm::GenerateRSAKeys(privateKeyFile, publicKeyFile, bits);
+                    std::cout << "\n\n Par de chaves gerado com sucesso!\n\n";
                 }
             }
-            break;
-            case 2:
+            catch (const std::exception& ex)
             {
-                try
-                {
-                    system("cls");
-                    std::cout << "Digite o nome do arquivo texto que sera criptografado: ";
-                    cin >> fileName;
-
-                    RSA_Algorithm::EncryptFile(publicKeyFile, fileName, "encrypt.dat");
-                   
-                    std::cout << "\n\nArquivo criptografado com sucesso!\n\n";
-                }
-                catch (const std::exception& ex)
-                {
-                    cerr << "\n\nErro: " << ex.what() << "\n\n";
-                }
+                cerr << "\n\nErro: " << ex.what() << "\n\n";
             }
-            break;
-            case 3:
+        }
+        break;
+        case 2:
+        {
+            try
             {
-                try
-                {
-                    system("cls");
-                    std::cout << "Digite o nome do arquivo final: ";
-                    cin >> fileName;
+                system("cls");
+                std::cout << "Digite o nome do arquivo texto que sera criptografado: ";
+                cin >> fileName;
 
-                    RSA_Algorithm::DecryptFile(privateKeyFile, "encrypt.dat", fileName);
+                RSA_Algorithm::EncryptFileRSA(publicKeyFile, fileName, "encrypt.dat");
 
-                    std::cout << "\n\nArquivo decriptografado com sucesso!\n\n";
-                }
-                catch (const std::exception& ex)
-                {
-                    cerr << "\n\nErro: " << ex.what() << "\n\n";
-                }
+                std::cout << "\n\nArquivo criptografado com sucesso!\n\n";
             }
-            break;
-            case 4:
+            catch (const std::exception& ex)
             {
-                exit(EXIT_FAILURE);
+                cerr << "\n\nErro: " << ex.what() << "\n\n";
             }
-            default:
-                exit(EXIT_FAILURE);
+        }
+        break;
+        case 3:
+        {
+            try
+            {
+                system("cls");
+                std::cout << "Digite o nome do arquivo final: ";
+                cin >> fileName;
 
+                RSA_Algorithm::DecryptFileRSA(privateKeyFile, "encrypt.dat", fileName);
+
+                std::cout << "\n\nArquivo decriptografado com sucesso!\n\n";
             }
+            catch (const std::exception& ex)
+            {
+                cerr << "\n\nErro: " << ex.what() << "\n\n";
+            }
+        }
+        break;
+        case 4:
+        {
+            exit(EXIT_FAILURE);
+        }
+        default:
+            exit(EXIT_FAILURE);
+
+        }
         system("pause");
         system("cls");
     }

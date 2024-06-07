@@ -1,3 +1,0 @@
-Valor da chave simétrica AES 256 bits
-=====================================
-6E0FFFA7FF27831AF82F8EBCF775B070C57D0BF9A68B105D92B3DCF42DE3B87B
