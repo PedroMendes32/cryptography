@@ -234,6 +234,7 @@ void menu_key_size(void)
 
 int main(void)
 {
+    init();
     setlocale(LC_ALL, "Portuguese");
     short int option;
     const string privateKeyFile = "rsa-private.key";

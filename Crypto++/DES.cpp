@@ -184,6 +184,7 @@ void menu(void)
 
 int main(int argc, char* argv[])
 {
+    init();
     setlocale(LC_ALL, "Portuguese");
     short int option;
     string file_name;

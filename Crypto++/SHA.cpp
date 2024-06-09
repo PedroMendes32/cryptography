@@ -152,6 +152,7 @@ void menu(void)
 
 int main(void)
 {
+    init();
     setlocale(LC_ALL, "Portuguese");
     string filename;
     short int option;
