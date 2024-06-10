@@ -37,12 +37,14 @@ double getCurrentValue(void)
     return counterVal.doubleValue;
 }
 
-SIZE_T getCurrentMemoryUsageProcess(void)
+DWORDLONG getCurrentMemoryUsage(void)
 {
-    PROCESS_MEMORY_COUNTERS_EX pmc;
-    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
-    SIZE_T physMemUsedByMe = pmc.WorkingSetSize;
-    return physMemUsedByMe;
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&memInfo);
+    DWORDLONG physMemUsed = memInfo.ullTotalPhys - memInfo.ullAvailPhys;
+
+    return physMemUsed;
 }
 
 /*
@@ -59,7 +61,7 @@ namespace DES_Algorithm
     /// <param name="timeTaken ->">Tempo decorrido para a operação.</param>
     /// <param name="cpuUsage ->">Uso de CPU durante a operação.</param>
     /// <param name="memoryUsage ->">Uso de memória durante a operação.</param>
-    void logPerformance(const string& operation, const double& timeTaken, const double& cpuUsage, const SIZE_T& memoryUsage)
+    void logPerformance(const string& operation, const double& timeTaken, const double& cpuUsage, const DWORDLONG& memoryUsage)
     {
         ofstream logFile("performance_log.txt", ios::app);
         if (logFile.is_open())
@@ -95,7 +97,7 @@ namespace DES_Algorithm
         chrono::duration<double> duration = end - start;
 
         double cpuUsage = getCurrentValue();
-        SIZE_T memoryUsage = getCurrentMemoryUsageProcess();
+        DWORDLONG memoryUsage = getCurrentMemoryUsage();
 
         logPerformance("Encryption", duration.count(), cpuUsage, memoryUsage);
     }
@@ -122,7 +124,7 @@ namespace DES_Algorithm
         chrono::duration<double> duration = end - start;
 
         double cpuUsage = getCurrentValue();
-        SIZE_T memoryUsage = getCurrentMemoryUsageProcess();
+        DWORDLONG memoryUsage = getCurrentMemoryUsage();
 
         logPerformance("Decryption", duration.count(), cpuUsage, memoryUsage);
     }
@@ -144,7 +146,7 @@ namespace DES_Algorithm
         chrono::duration<double> duration = end - start;
 
         double cpuUsage = getCurrentValue();
-        SIZE_T memoryUsage = getCurrentMemoryUsageProcess();
+        DWORDLONG memoryUsage = getCurrentMemoryUsage();
 
         logPerformance("Key Generation", duration.count(), cpuUsage, memoryUsage);
     }

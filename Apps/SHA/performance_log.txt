@@ -1,1 +1,0 @@
-Hash Generation: 0.0004234 seconds, CPU Usage: 0%, Memory Usage: 5398528 bytes

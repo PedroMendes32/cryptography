@@ -1,1 +1,0 @@
-Valor da chave privada DES 64 bits = 591514E3649C2FE0
