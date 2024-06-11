@@ -38,14 +38,12 @@ double getCurrentValue(void)
     return counterVal.doubleValue;
 }
 
-DWORDLONG getCurrentMemoryUsage(void)
+SIZE_T getCurrentMemoryUsageProcess(void)
 {
-    MEMORYSTATUSEX memInfo;
-    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
-    GlobalMemoryStatusEx(&memInfo);
-    DWORDLONG physMemUsed = memInfo.ullTotalPhys - memInfo.ullAvailPhys;
-
-    return physMemUsed;
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+    SIZE_T physMemUsedByMe = pmc.WorkingSetSize;
+    return physMemUsedByMe;
 }
 
 /*
@@ -62,7 +60,7 @@ namespace SHA_Algorithm
     /// <param name="timeTaken ->">Tempo decorrido para a operação.</param>
     /// <param name="cpuUsage ->">Uso de CPU durante a operação.</param>
     /// <param name="memoryUsage ->">Uso de memória durante a operação.</param>
-    void logPerformance(const string& operation, const double& timeTaken, const double& cpuUsage, const DWORDLONG& memoryUsage)
+    void logPerformance(const string& operation, const double& timeTaken, const double& cpuUsage, const SIZE_T& memoryUsage)
     {
         ofstream logFile("performance_log.txt", ios::app);
         if (logFile.is_open())
@@ -119,7 +117,7 @@ namespace SHA_Algorithm
         chrono::duration<double> duration = end - start;
 
         double cpuUsage = getCurrentValue();
-        DWORDLONG memoryUsage = getCurrentMemoryUsage();
+        SIZE_T memoryUsage = getCurrentMemoryUsageProcess();
 
         logPerformance("Hash Generation", duration.count(), cpuUsage, memoryUsage);
         return hash;
